@@ -1,41 +1,38 @@
 import random
 import string
 
-def generate_password(name, birth_date, length=12, use_special_chars=True, num_passwords=1):
+def enhance_password(base_password, length, use_special_chars, use_numbers=True, use_uppercase=True):
     """
-    Generate short, strong, and easy-to-remember passwords using user-specific information.
-
+    Enhance the base password by adding random elements to make it more secure while keeping it user-friendly.
+    
     Parameters:
-    - name (str): User's name.
-    - birth_date (str): User's birth date (format: YYYYMMDD).
-    - length (int): Length of each password.
+    - base_password (str): User's preferred base password.
+    - length (int): Desired length of the final password.
     - use_special_chars (bool): Whether to include special characters.
-    - num_passwords (int): Number of passwords to generate.
+    - use_numbers (bool): Whether to include numbers.
+    - use_uppercase (bool): Whether to include uppercase letters.
     
     Returns:
-    - list of str: Generated passwords.
+    - str: Enhanced password.
     """
-    # Prepare base parts of the password
-    base_parts = [name.replace(" ", ""), birth_date]  # Remove spaces from name and add birth date
-    base_password = ''.join(base_parts)
-    
-    # Define characters to use
-    characters = string.ascii_letters + string.digits
+    # Define characters to use based on user preferences
+    characters = string.ascii_lowercase
+    if use_uppercase:
+        characters += string.ascii_uppercase
+    if use_numbers:
+        characters += string.digits
     if use_special_chars:
         characters += string.punctuation
     
-    passwords = []
-    for _ in range(num_passwords):
-        # Generate additional random characters
-        remaining_length = length - len(base_password)
-        if remaining_length > 0:
-            base_password += ''.join(random.choice(characters) for _ in range(remaining_length))
-        
-        # Shuffle the password to ensure randomness
-        password = ''.join(random.sample(base_password, len(base_password)))
-        passwords.append(password[:length])
+    # Add random characters if necessary to meet the desired length
+    remaining_length = length - len(base_password)
+    if remaining_length > 0:
+        base_password += ''.join(random.choice(characters) for _ in range(remaining_length))
     
-    return passwords
+    # Shuffle the password to ensure randomness
+    enhanced_password = ''.join(random.sample(base_password, len(base_password)))
+    
+    return enhanced_password[:length]
 
 def check_password_strength(password):
     """Check the strength of the generated password."""
@@ -53,49 +50,32 @@ def check_password_strength(password):
     return strength
 
 def main():
-    print("Welcome to the Personalized Password Generator!")
+    print("Welcome to the Advanced Password Enhancer!")
 
-    # Get user input for name
-    name = input("Enter your name (first and last): ").strip()
+    # Get user input for the base password
+    base_password = input("Enter your preferred base password: ").strip()
     
-    # Get user input for birth date
-    while True:
-        birth_date = input("Enter your birth date (format: YYYYMMDD): ").strip()
-        if len(birth_date) == 8 and birth_date.isdigit():
-            break
-        print("Invalid birth date format. Please enter in YYYYMMDD format.")
-    
-    # Get user input for number of passwords
+    # Ask user for password length
     while True:
         try:
-            num_passwords = int(input("Enter the number of passwords to generate: "))
-            if num_passwords < 1:
-                raise ValueError("Number must be at least 1.")
+            length = int(input("Enter the desired length of the final password (minimum 12 characters): ").strip())
+            if length < 12:
+                raise ValueError("Length must be at least 12 characters.")
             break
         except ValueError as e:
             print(f"Invalid input: {e}. Please enter a positive integer.")
 
-    # Get user input for password length
-    while True:
-        try:
-            length = int(input("Enter the desired length of the password (default is 12): ") or 12)
-            if length < 8:
-                raise ValueError("Length must be at least 8 characters.")
-            break
-        except ValueError as e:
-            print(f"Invalid input: {e}. Please enter a positive integer.")
-
-    # Get user input for including special characters
-    special_chars_input = input("Include special characters? (y/n): ").strip().lower()
-    use_special_chars = special_chars_input == 'y'
-
-    # Generate passwords
-    passwords = generate_password(name=name, birth_date=birth_date, length=length, 
-                                   use_special_chars=use_special_chars, num_passwords=num_passwords)
+    # Get user preferences for password complexity
+    use_special_chars = input("Include special characters? (y/n): ").strip().lower() == 'y'
+    use_numbers = input("Include numbers? (y/n): ").strip().lower() == 'y'
+    use_uppercase = input("Include uppercase letters? (y/n): ").strip().lower() == 'y'
     
-    # Display passwords and their strengths
-    for i, password in enumerate(passwords, 1):
-        print(f"Password {i}: {password} (Strength: {check_password_strength(password)})")
+    # Enhance the base password
+    enhanced_password = enhance_password(base_password, length, use_special_chars, use_numbers, use_uppercase)
+    
+    # Display the enhanced password and its strength
+    print(f"Enhanced Password: {enhanced_password} (Strength: {check_password_strength(enhanced_password)})")
 
 if __name__ == "__main__":
     main()
+  
