@@ -1,73 +1,101 @@
-import tkinter as tk
-from tkinter import messagebox
 import random
 import string
 
-class CryptixApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Cryptix Password Generator")
-        self.root.geometry("400x300")
+def generate_password(name, birth_date, length=12, use_special_chars=True, num_passwords=1):
+    """
+    Generate short, strong, and easy-to-remember passwords using user-specific information.
 
-        # Title Label
-        self.title_label = tk.Label(root, text="Welcome to Cryptix", font=("Helvetica", 16))
-        self.title_label.pack(pady=10)
+    Parameters:
+    - name (str): User's name.
+    - birth_date (str): User's birth date (format: YYYYMMDD).
+    - length (int): Length of each password.
+    - use_special_chars (bool): Whether to include special characters.
+    - num_passwords (int): Number of passwords to generate.
+    
+    Returns:
+    - list of str: Generated passwords.
+    """
+    # Prepare base parts of the password
+    base_parts = [name.replace(" ", ""), birth_date]  # Remove spaces from name and add birth date
+    base_password = ''.join(base_parts)
+    
+    # Define characters to use
+    characters = string.ascii_letters + string.digits
+    if use_special_chars:
+        characters += string.punctuation
+    
+    passwords = []
+    for _ in range(num_passwords):
+        # Generate additional random characters
+        remaining_length = length - len(base_password)
+        if remaining_length > 0:
+            base_password += ''.join(random.choice(characters) for _ in range(remaining_length))
+        
+        # Shuffle the password to ensure randomness
+        password = ''.join(random.sample(base_password, len(base_password)))
+        passwords.append(password[:length])
+    
+    return passwords
 
-        # Password Length Input
-        self.length_label = tk.Label(root, text="Password Length:")
-        self.length_label.pack(pady=5)
-
-        self.length_entry = tk.Entry(root)
-        self.length_entry.pack(pady=5)
-
-        # Special Characters Option
-        self.special_chars_var = tk.BooleanVar()
-        self.special_chars_check = tk.Checkbutton(root, text="Include Special Characters", variable=self.special_chars_var)
-        self.special_chars_check.pack(pady=5)
-
-        # Generate Button
-        self.generate_button = tk.Button(root, text="Generate Password", command=self.generate_password)
-        self.generate_button.pack(pady=10)
-
-        # Password Display
-        self.password_label = tk.Label(root, text="Generated Password:")
-        self.password_label.pack(pady=5)
-
-        self.password_text = tk.Entry(root, width=50)
-        self.password_text.pack(pady=5)
-
-        # Copy to Clipboard Button
-        self.copy_button = tk.Button(root, text="Copy to Clipboard", command=self.copy_to_clipboard)
-        self.copy_button.pack(pady=10)
-
-    def generate_password(self):
-        try:
-            length = int(self.length_entry.get())
-            use_special_chars = self.special_chars_var.get()
-            password = self._create_password(length, use_special_chars)
-            self.password_text.delete(0, tk.END)
-            self.password_text.insert(0, password)
-        except ValueError:
-            messagebox.showerror("Input Error", "Please enter a valid length.")
-
-    def _create_password(self, length, use_special_chars):
-        characters = string.ascii_letters + string.digits
-        if use_special_chars:
-            characters += string.punctuation
-        return ''.join(random.choice(characters) for _ in range(length))
-
-    def copy_to_clipboard(self):
-        password = self.password_text.get()
-        if password:
-            self.root.clipboard_clear()
-            self.root.clipboard_append(password)
-            messagebox.showinfo("Copied", "Password copied to clipboard!")
+def check_password_strength(password):
+    """Check the strength of the generated password."""
+    strength = "Weak"
+    if len(password) >= 8:
+        if (any(c.islower() for c in password) and 
+            any(c.isupper() for c in password) and 
+            any(c.isdigit() for c in password) and 
+            any(c in string.punctuation for c in password)):
+            strength = "Strong"
+        elif (any(c.islower() for c in password) and 
+              any(c.isupper() for c in password) and 
+              any(c.isdigit() for c in password)):
+            strength = "Moderate"
+    return strength
 
 def main():
-    root = tk.Tk()
-    app = CryptixApp(root)
-    root.mainloop()
+    print("Welcome to the Personalized Password Generator!")
+
+    # Get user input for name
+    name = input("Enter your name (first and last): ").strip()
+    
+    # Get user input for birth date
+    while True:
+        birth_date = input("Enter your birth date (format: YYYYMMDD): ").strip()
+        if len(birth_date) == 8 and birth_date.isdigit():
+            break
+        print("Invalid birth date format. Please enter in YYYYMMDD format.")
+    
+    # Get user input for number of passwords
+    while True:
+        try:
+            num_passwords = int(input("Enter the number of passwords to generate: "))
+            if num_passwords < 1:
+                raise ValueError("Number must be at least 1.")
+            break
+        except ValueError as e:
+            print(f"Invalid input: {e}. Please enter a positive integer.")
+
+    # Get user input for password length
+    while True:
+        try:
+            length = int(input("Enter the desired length of the password (default is 12): ") or 12)
+            if length < 8:
+                raise ValueError("Length must be at least 8 characters.")
+            break
+        except ValueError as e:
+            print(f"Invalid input: {e}. Please enter a positive integer.")
+
+    # Get user input for including special characters
+    special_chars_input = input("Include special characters? (y/n): ").strip().lower()
+    use_special_chars = special_chars_input == 'y'
+
+    # Generate passwords
+    passwords = generate_password(name=name, birth_date=birth_date, length=length, 
+                                   use_special_chars=use_special_chars, num_passwords=num_passwords)
+    
+    # Display passwords and their strengths
+    for i, password in enumerate(passwords, 1):
+        print(f"Password {i}: {password} (Strength: {check_password_strength(password)})")
 
 if __name__ == "__main__":
     main()
-
